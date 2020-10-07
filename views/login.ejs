@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+  <meta charset="utf-8">
+  <title>Login Page</title>
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+  <!-- Optional theme -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+  <!-- Latest compiled and minified JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+  <div class="container loginContainer">
+    <div class="card row">
+      <div class="col-lg-3 loginSection">
+      <h3>Please Enter Details</h3>
+      <form action="/login" method="post">
+        <input class="form-control" placeholder="Enter Email" type="email" name="email" value=""><br>
+        <input class="form-control" placeholder="Enter Password" type="password" name="password" value=""><br>
+        <select class="form-control" id="role" name="role">
+          <option value="Agent">Agent</option>
+          <option value="Customer">Customer</option>
+          <option value="Admin">Admin</option>
+        </select><br>
+        <input class="form-control" type="password" id="key" name="key" value="" placeholder="Enter Provided Key"><br>
+        <button class="btn btn-block btn-primary" type = "submit" name = "button" >Login </button>
+      </form>
+      </div>
+    </div>
+  </div>
+  <script type="text/javascript">
+  var a = document.getElementById("role")
+  var keyHTML = document.getElementById("key")
+  a.addEventListener("change",function(){
+    var value = a.value;
+    if(value==="Customer"){
+      keyHTML.style.display = "none";
+    }else if(value==="Agent"){
+      keyHTML.style.display = "block"
+    }else if(value==="Admin"){
+      keyHTML.style.display = "block";
+    }
+  });
+  </script>
+</body>
+
+</html>

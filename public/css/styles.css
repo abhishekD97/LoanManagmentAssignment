@@ -1,0 +1,15 @@
+body{
+  text-align: center;
+}
+.loginSection{
+  position: relative;
+  display: inline-block;
+  left: 400px;
+  top: 200px;
+}
+.customContainer{
+  display: inline-block;
+  position: relative;
+  left: 400px;
+  top: 140px;
+}
