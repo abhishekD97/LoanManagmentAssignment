@@ -20,34 +20,14 @@
     <div class="card row">
       <div class="col-lg-3 loginSection">
       <h3>Please Enter Details</h3>
-      <form action="/login" method="post">
-        <input class="form-control" placeholder="Enter Email" type="email" name="email" value=""><br>
-        <input class="form-control" placeholder="Enter Password" type="password" name="password" value=""><br>
-        <select class="form-control" id="role" name="role">
-          <option value="Agent">Agent</option>
-          <option value="Customer">Customer</option>
-          <option value="Admin">Admin</option>
-        </select><br>
-        <input class="form-control" type="password" id="key" name="key" value="" placeholder="Enter Provided Key"><br>
-        <button class="btn btn-block btn-primary" type = "submit" name = "button" >Login </button>
+      <form action="/login" method="POST">
+        <input class="form-control" placeholder="Enter Email" type="email" name="username"><br>
+        <input class="form-control" placeholder="Enter Password" type="password" name="password" ><br>
+        <button class="btn btn-block btn-primary" type ="submit" >Login </button>
       </form>
       </div>
     </div>
   </div>
-  <script type="text/javascript">
-  var a = document.getElementById("role")
-  var keyHTML = document.getElementById("key")
-  a.addEventListener("change",function(){
-    var value = a.value;
-    if(value==="Customer"){
-      keyHTML.style.display = "none";
-    }else if(value==="Agent"){
-      keyHTML.style.display = "block"
-    }else if(value==="Admin"){
-      keyHTML.style.display = "block";
-    }
-  });
-  </script>
 </body>
 
 </html>

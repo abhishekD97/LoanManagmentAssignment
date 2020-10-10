@@ -1,206 +1,138 @@
-require('dotenv').config()
-const express = require("express")
+//jshint esversion:6
+require('dotenv').config();
+const express = require("express");
+const bodyParser = require("body-parser");
+const ejs = require("ejs");
 const app = express();
-const bodyParser = require("body-parser")
-const ejs = require("ejs")
-const mongoose = require("mongoose")
-const bcrypt = require("bcrypt")
-const Loan = require("loanjs").Loan
-const saltRounds = 10;
+const mongoose = require("mongoose");
+const session = require("express-session");
+const passport = require("passport");
+const passportLocalMongoose = require("passport-local-mongoose")
+// const Loan = require("loanjs").Loan
 
-
-
-app.use(bodyParser.urlencoded({extended:true}))
+app.use(bodyParser.urlencoded({extended:false}))
 app.use(express.static("public"))
 app.set('view engine','ejs')
 
+app.use(session({
+  secret:process.env.Access_Token,
+  resave:false,
+  saveUninitialized:false
+}))
+app.use(passport.initialize());
+app.use(passport.session());
+
 mongoose.connect("mongodb://localhost:27017/loanDB",{ useNewUrlParser: true,useUnifiedTopology: true });
+mongoose.set('useNewUrlParser', true);
+mongoose.set('useFindAndModify', false);
+mongoose.set('useCreateIndex', true);
 
-const adminSchema = new mongoose.Schema({
-  role:{
-    type:String,
-    required:true
-  },
-  name:{
-    type:String,
-    required:true
-  },
-  email:{
-    type:String,
-    required:true
-  },
-  password:{
-    type:String,
-    required:true
-  }
-  // ,
-  // key:{
-  //   type:String,
-  //   required:true
-  // }
+const usersSchema = new mongoose.Schema({
+  role:String,
+  email:String,
+  password:String
 })
 
-const agentsSchema = new mongoose.Schema({
-  role:{
-    type:String,
-    required:true
-  },
-  name:{
-    type:String,
-    required:true
-  },
-  email:{
-    type:String,
-    required:true
-  },
-  password:{
-    type:String,
-    required:true
-  }
-  // ,
-  // key:{
-  //   type:String,
-  //   required:true
-  // }
-})
+usersSchema.plugin(passportLocalMongoose);
+const User = new mongoose.model("User",usersSchema);
 
-const customersSchema = new mongoose.Schema({
-  role:{
-    type:String,
-    required:true
-  },
-  name:{
-    type:String,
-    required:true
-  },
-  email:{
-    type:String,
-    required:true
-  },
-  password:{
-    type:String,
-    required:true
-  }
-})
+passport.use(User.createStrategy());
+passport.serializeUser(User.serializeUser(function(user, done) {
+  done(null, user);
+}));
+passport.deserializeUser(User.deserializeUser(function(user, done) {
+  done(null, user);
+}));
 
-const Admin = new mongoose.model("Admin",adminSchema);
-const Agent = new mongoose.model("Agent",agentsSchema);
-const Customer = new mongoose.model("Customer",customersSchema);
-
-var loan = new Loan(200000,24,20);
-console.log(loan.installments[0].installment);
+// var loan = new Loan(200000,24,20);
+// console.log(loan.installments[0].installment);
 
 app.get("/",function(req,res){
   res.render("home");
 })
 
-app.get("/:loc",function(req,res){
-  switch (req.params.loc) {
-    case "home": res.render("home");
-    break;
-    case "login": res.render("login");
-    break;
-    case "register": res.render("register");
-    break;
-    default: res.render("home")
+app.get("/home", function(req, res) {
+  res.render("home");
+})
+
+app.get("/login",function(req,res){
+  res.render("login");
+})
+
+app.get("/register",function(req,res){
+  res.render("register");
+})
+
+app.get("/secrets", function(req,res){
+  if(req.isAuthenticated()){
+    res.render("secrets")
+  }else{
+    res.redirect("/login")
   }
+})
+
+app.get("/logout",function(req,res){
+  req.logout();
+  res.redirect("/");
 })
 
 app.post("/register",function(req,res){
-  const role = req.body.role;
-  const name = req.body.name;
-  const email = req.body.email;
-  const password = req.body.password;
-  const key = req.body.key;
-
-  if(role === "Customer"){
-    bcrypt.hash(password, saltRounds, function(err, hash){
-      const newCustomer = new Customer({role:role,name:name,email:email,password:hash})
-      newCustomer.save(function(err){
-        if(err){console.log(err)}else{res.render("home")}
-      });
-    })
-  }else if(role === "Agent"){
-      bcrypt.hash(password, saltRounds, function(err,hash){
-        const newAgent = new Agent({role:role,name:name,email:email,password:hash})
-        newAgent.save(function(err){
-          if(err){console.log(err)}else{res.render("home")}
-        });
-      })
-  }else if(role === "Admin"){
-      bcrypt.hash(password, saltRounds, function(err,hash){
-        const newAdmin = new Admin({role:role,name:name,email:email,password:hash})
-        newAdmin.save(function(err){
-          if(err){console.log(err)}else{res.render("home")}
-        });
-      })
-  }
+  if(req.body.role === "Customer"){
+  User.register({username:req.body.username,role:"Customer"},req.body.password,function(err,user){
+if(err){
+  console.log(err);
+  res.redirect("/register");
+}else{
+  passport.authenticate("local")(req,res,function(){
+    res.redirect("/secrets")
+  })
+}
+})
+}else if(req.body.role === "Agent"){
+  if(req.body.key === process.env.AgentKey){
+  User.register({username:req.body.username,role:"Agent"},req.body.password,function(err,user){
+if(err){
+  console.log(err);
+  res.redirect("/register");
+}else{
+  passport.authenticate("local")(req,res,function(){
+    res.redirect("/secrets")
+  })
+}
+})
+}
+}else if(req.body.role === "Admin"){
+  if(req.body.key===process.env.AdminKey){
+  User.register({username:req.body.username,role:"Admin"},req.body.password,function(err,user){
+if(err){
+  console.log(err);
+  res.redirect("/register");
+}else{
+  passport.authenticate("local")(req,res,function(){
+    res.redirect("/secrets")
+  })
+}
+})
+}
+}
 })
 
-app.post("/login",function(req,res){
-  const role = req.body.role;
-  const email = req.body.email;
-  const password = req.body.password;
-  const key = req.body.key;
-
-  if(role === "Customer")
-  {
-    Customer.findOne({email:email},function(err,foundOne){
-      if(err){console.log(err)}
-      else
-      {
-        if(foundOne){
-          bcrypt.compare(password,foundOne.password,function(err,result){
-            if(result === true){
-              res.render("home")
-            }else{console.log("Wrong Password")}
-          })
-        }else{ res.send("<p>user does not exist</p>") }
-      }
-    })
-  }
-  else if(role === "Agent")
-  {
-    Agent.findOne({email:email},function(err,foundOne){
-      if(err){console.log(err)}
-      else
-      {
-        if(foundOne){
-
-            if(key===process.env.AgentKey){
-              bcrypt.compare(password,foundOne.password,function(err,result){
-                if(err){console.log(err)}else{if(result===true){
-                  res.render("home")
-                }}
-              })
-            }else{res.send("<p>wrong key</p>")}
-
-        }else{  res.send("<p>user does not exist</p>")  }
-      }
-    })
-  }
-  else if(role === "Admin")
-  {
-    Admin.findOne({email:email},function(err,foundOne){
-      if(err){console.log(err)}
-      else
-      {
-        if(foundOne){
-
-            if(key===process.env.AdminKey){
-              bcrypt.compare(password,foundOne.password,function(err,result){
-                if(result===true){
-                  res.render("home")
-                }
-              })
-            }
-
-        }else{  res.send("<p>user does not exist</p>")  }
-      }
-    })
-  }
+app.post("/login", function(req, res) {
+  const user = new User({
+    username: req.body.username,
+    password: req.body.password
+  });
+  req.login(user, function(err){
+    if(err){
+      console.log(err);
+      res.redirect("/login");
+    }else{
+      passport.authenticate("local")(req,res,function(){
+        res.redirect("/secrets");
+      })
+    }
+  })
 })
-
 
 app.listen(3000,function(req,res){
   console.log("server up at 3000")
