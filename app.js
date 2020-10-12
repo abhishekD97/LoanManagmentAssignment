@@ -8,7 +8,7 @@ const mongoose = require("mongoose");
 const session = require("express-session");
 const passport = require("passport");
 const passportLocalMongoose = require("passport-local-mongoose")
-// const Loan = require("loanjs").Loan
+const Loan = require("loanjs").Loan
 
 app.use(bodyParser.urlencoded({extended:false}))
 app.use(express.static("public"))
@@ -44,28 +44,49 @@ passport.deserializeUser(User.deserializeUser(function(user, done) {
   done(null, user);
 }));
 
-// var loan = new Loan(200000,24,20);
-// console.log(loan.installments[0].installment);
-
 app.get("/",function(req,res){
-  res.render("home");
+  res.render("home")
 })
 
 app.get("/home", function(req, res) {
-  res.render("home");
+  res.render("home")
 })
 
 app.get("/login",function(req,res){
-  res.render("login");
+  res.render("login")
 })
 
 app.get("/register",function(req,res){
-  res.render("register");
+  res.render("register")
 })
 
 app.get("/secrets", function(req,res){
   if(req.isAuthenticated()){
     res.render("secrets")
+  }else{
+    res.redirect("/login")
+  }
+})
+
+app.get("/secretsAgent", function(req,res){
+  if(req.isAuthenticated()){
+    res.render("secretsAgent")
+  }else{
+    res.redirect("/login")
+  }
+})
+
+app.get("/secretsAdmin", function(req,res){
+  if(req.isAuthenticated()){
+    res.render("secretsAdmin")
+  }else{
+    res.redirect("/login")
+  }
+})
+
+app.get("/secrets/planDetails",function(req,res){
+  if(req.isAuthenticated()){
+    res.render("planDetails")
   }else{
     res.redirect("/login")
   }
@@ -96,11 +117,11 @@ if(err){
   res.redirect("/register");
 }else{
   passport.authenticate("local")(req,res,function(){
-    res.redirect("/secrets")
+    res.redirect("/secretsAgent")
   })
 }
 })
-}
+}else return res.send("Wrong Key")
 }else if(req.body.role === "Admin"){
   if(req.body.key===process.env.AdminKey){
   User.register({username:req.body.username,role:"Admin"},req.body.password,function(err,user){
@@ -109,11 +130,11 @@ if(err){
   res.redirect("/register");
 }else{
   passport.authenticate("local")(req,res,function(){
-    res.redirect("/secrets")
+    res.redirect("/secretsAdmin")
   })
 }
 })
-}
+}else return res.send("Wrong Key")
 }
 })
 
@@ -132,6 +153,16 @@ app.post("/login", function(req, res) {
       })
     }
   })
+})
+
+app.post("/secrets",function(req,res){
+  const p = req.body.principalAmount;
+  const t = req.body.tenure;
+  const i = req.body.interestRate;
+  const loan = new Loan(p,t,i);
+  const installments = loan.installments;
+  // console.log(installments)
+  res.render("/secrets/planDetails",{loan:loan, installments:installments})
 })
 
 app.listen(3000,function(req,res){
