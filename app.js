@@ -8,11 +8,13 @@ const mongoose = require("mongoose");
 const session = require("express-session");
 const passport = require("passport");
 const passportLocalMongoose = require("passport-local-mongoose")
-const Loan = require("loanjs").Loan
+const Loan = require("loanjs").Loan;
+var cookieParser = require('cookie-parser');
 
 app.use(bodyParser.urlencoded({extended:false}))
 app.use(express.static("public"))
 app.set('view engine','ejs')
+app.use(cookieParser())
 
 app.use(session({
   secret:process.env.Access_Token,
@@ -27,10 +29,19 @@ mongoose.set('useNewUrlParser', true);
 mongoose.set('useFindAndModify', false);
 mongoose.set('useCreateIndex', true);
 
+const loansSchema = new mongoose.Schema({
+  principalAmount:Number,
+  tenure:Number,
+  interest:Number
+})
+
+const LoanObject = new mongoose.model("LoanObject", loansSchema);
+
 const usersSchema = new mongoose.Schema({
   role:String,
   email:String,
-  password:String
+  password:String,
+  loanPlan:loansSchema
 })
 
 usersSchema.plugin(passportLocalMongoose);
@@ -156,13 +167,46 @@ app.post("/login", function(req, res) {
 })
 
 app.post("/secrets",function(req,res){
-  const p = req.body.principalAmount;
-  const t = req.body.tenure;
-  const i = req.body.interestRate;
-  const loan = new Loan(p,t,i);
-  const installments = loan.installments;
-  // console.log(installments)
-  res.render("/secrets/planDetails",{loan:loan, installments:installments})
+  if(req.isAuthenticated()){
+    const p = req.body.principalAmount;
+    const t = req.body.tenure;
+    const i = req.body.interestRate;
+    const loan = new Loan(p,t,i);
+    const loanInputs = {
+      p:p,
+      t:t,
+      i:i
+    }
+    // console.log(installments)
+    res.render("planDetails",{loan:loan,loanInputs:loanInputs})
+  }else{
+    res.redirect("/login")
+  }
+})
+
+app.post("/planDetails",function(req,res){
+  if(req.isAuthenticated()){
+    const p = req.body.p;
+    const t = req.body.t;
+    const i = req.body.i;
+    const newLoan = new LoanObject({
+      principalAmount:p,
+      tenure:t,
+      interest:i
+    })
+    newLoan.save();
+    const query = { username:req.user.username } ;
+    // console.log(req.user)
+    User.findOneAndUpdate(query,{loanPlan:newLoan},{new:true},function(err){
+      if(err) return console.log(err);
+      else{
+        console.log("successfully selected loan plan");
+        res.redirect("/secrets")
+      }
+    })
+  }else{
+    res.redirect("/login")
+  }
 })
 
 app.listen(3000,function(req,res){

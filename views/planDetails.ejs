@@ -47,6 +47,30 @@
       </table>
     </div>
   </div>
-  <button type="button" class="btn btn-block btn-primary" name="button">Confirm Plan</button>
+  <form action="/planDetails" method="post">
+    <div class="container">
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped">
+        <tr>
+          <th>Principal Amount</th>
+          <th>Tenure</th>
+          <th>Interest</th>
+        </tr>
+        <tr id="planDetailsTable">
+          <span style="display:none;">
+            <input type="number" name="p" value="<%=loanInputs.p%>">
+            <input type="number" name="t" value="<%=loanInputs.t%>">
+            <input type="number" name="i" value="<%=loanInputs.i%>">
+          </span>
+          <td><%=loanInputs.p%></td>
+          <td><%=loanInputs.t%></td>
+          <td><%=loanInputs.i%></td>
+        </tr>
+      </table>
+    </div>
+    </div>
+    <button type="submit" class="btn btn-block btn-primary" name="submit">Confirm Plan</button>
+  </form>
+
 </body>
 </html>
