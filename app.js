@@ -32,7 +32,8 @@ mongoose.set('useCreateIndex', true);
 const loansSchema = new mongoose.Schema({
   principalAmount:Number,
   tenure:Number,
-  interest:Number
+  interest:Number,
+  status:String
 })
 
 const LoanObject = new mongoose.model("LoanObject", loansSchema);
@@ -41,7 +42,10 @@ const usersSchema = new mongoose.Schema({
   role:String,
   email:String,
   password:String,
-  loanPlan:loansSchema
+  loanPlan:[{  principalAmount:Number,
+    tenure:Number,
+    interest:Number,
+    status:String}]
 })
 
 usersSchema.plugin(passportLocalMongoose);
@@ -73,7 +77,7 @@ app.get("/register",function(req,res){
 
 app.get("/secrets", function(req,res){
   if(req.isAuthenticated()){
-    res.render("secrets")
+    res.render("secrets",{loan:req.user.loanPlan})
   }else{
     res.redirect("/login")
   }
@@ -192,18 +196,19 @@ app.post("/planDetails",function(req,res){
     const newLoan = new LoanObject({
       principalAmount:p,
       tenure:t,
-      interest:i
+      interest:i,
+      status:"Pending"
     })
     newLoan.save();
-    const query = { username:req.user.username } ;
-    // console.log(req.user)
-    User.findOneAndUpdate(query,{loanPlan:newLoan},{new:true},function(err){
-      if(err) return console.log(err);
-      else{
-        console.log("successfully selected loan plan");
-        res.redirect("/secrets")
-      }
-    })
+    User.findOneAndUpdate({username:req.user.username},{$push:{loanPlan:newLoan}},function(error,success)
+    {
+      if(error){
+      console.log(error)
+    }else{
+      console.log("successfully updated loan plan")
+      res.redirect("/secrets")
+    }
+  })
   }else{
     res.redirect("/login")
   }
