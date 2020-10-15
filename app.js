@@ -83,16 +83,12 @@ app.get("/secrets", function(req,res){
   }
 })
 
-app.get("/secretsAgent/editPlan",function(req,res){
-  res.render("editPlan")
-})
-
 app.get("/secretsAgent", function(req,res){
   if(req.isAuthenticated()){
     User.find({role:"Customer"},function(err,found){
       if(err) return console.log(err);
       else{
-        res.render("secretsAgent",{customers:found})
+        res.render("secretsAgent",{customers:found,loan:""})
       }
     })
   }else{
@@ -203,11 +199,31 @@ app.post("/secrets",function(req,res){
   }
 })
 
+app.post("/loanFilter",function(req,res){
+  const identifier = req.body.identifier;
+  const principalAmount = req.body.principalAmount;
+  const tenure = req.body.tenure;
+  const interest = req.body.interest;
+  const status = req.body.status;
+  User.findOne({"loanPlan._id":identifier},function(err,foundR){
+    if(foundR){
+      console.log(foundR)
+    }else{
+      console.log("nope")
+    }
+  })
+})
+
 app.post("/secretsAgent", function(req,res){
   if(req.isAuthenticated()){
     const username = req.body.username;
-    User.findOne({username:username},function(err,foundOne){
-      res.render("secretsAgent",{loan:foundOne.loanPlan})
+    User.find({role:"Customer"},function(err,found){
+      if(!err){
+        User.findOne({username:username},function(err,foundOne){
+          res.render("secretsAgent",{customers:found,loan:foundOne.loanPlan})
+          // console.log(foundOne.loanPlan);
+        })
+      }
     })
 
   }else{
