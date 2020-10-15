@@ -83,9 +83,18 @@ app.get("/secrets", function(req,res){
   }
 })
 
+app.get("/secretsAgent/editPlan",function(req,res){
+  res.render("editPlan")
+})
+
 app.get("/secretsAgent", function(req,res){
   if(req.isAuthenticated()){
-    res.render("secretsAgent")
+    User.find({role:"Customer"},function(err,found){
+      if(err) return console.log(err);
+      else{
+        res.render("secretsAgent",{customers:found})
+      }
+    })
   }else{
     res.redirect("/login")
   }
@@ -99,13 +108,13 @@ app.get("/secretsAdmin", function(req,res){
   }
 })
 
-app.get("/secrets/planDetails",function(req,res){
-  if(req.isAuthenticated()){
-    res.render("planDetails")
-  }else{
-    res.redirect("/login")
-  }
-})
+// app.get("/secrets/planDetails",function(req,res){
+//   if(req.isAuthenticated()){
+//     res.render("planDetails")
+//   }else{
+//     res.redirect("/login")
+//   }
+// })
 
 app.get("/logout",function(req,res){
   req.logout();
@@ -164,7 +173,13 @@ app.post("/login", function(req, res) {
       res.redirect("/login");
     }else{
       passport.authenticate("local")(req,res,function(){
-        res.redirect("/secrets");
+        if(req.user.role==="Customer"){
+          res.redirect("/secrets");
+        }else if(req.user.role==="Agent"){
+          res.redirect("/secretsAgent");
+        }else if(req.user.role==="Admin"){
+          res.redirect("/secretsAdmin");
+        }
       })
     }
   })
@@ -188,6 +203,18 @@ app.post("/secrets",function(req,res){
   }
 })
 
+app.post("/secretsAgent", function(req,res){
+  if(req.isAuthenticated()){
+    const username = req.body.username;
+    User.findOne({username:username},function(err,foundOne){
+      res.render("secretsAgent",{loan:foundOne.loanPlan})
+    })
+
+  }else{
+    res.redirect("/login")
+  }
+})
+
 app.post("/planDetails",function(req,res){
   if(req.isAuthenticated()){
     const p = req.body.p;
@@ -197,7 +224,7 @@ app.post("/planDetails",function(req,res){
       principalAmount:p,
       tenure:t,
       interest:i,
-      status:"Pending"
+      status:"New"
     })
     newLoan.save();
     User.findOneAndUpdate({username:req.user.username},{$push:{loanPlan:newLoan}},function(error,success)
