@@ -42,10 +42,7 @@ const usersSchema = new mongoose.Schema({
   role:String,
   email:String,
   password:String,
-  loanPlan:[{  principalAmount:Number,
-    tenure:Number,
-    interest:Number,
-    status:String}]
+  loanPlan:[loansSchema]
 })
 
 usersSchema.plugin(passportLocalMongoose);
@@ -98,19 +95,16 @@ app.get("/secretsAgent", function(req,res){
 
 app.get("/secretsAdmin", function(req,res){
   if(req.isAuthenticated()){
-    res.render("secretsAdmin")
+    User.find({role:"Customer"},function(err,found){
+      if(err) return console.log(err);
+      else{
+        res.render("secretsAdmin",{customers:found,loan:""})
+      }
+    })
   }else{
     res.redirect("/login")
   }
 })
-
-// app.get("/secrets/planDetails",function(req,res){
-//   if(req.isAuthenticated()){
-//     res.render("planDetails")
-//   }else{
-//     res.redirect("/login")
-//   }
-// })
 
 app.get("/logout",function(req,res){
   req.logout();
@@ -199,20 +193,7 @@ app.post("/secrets",function(req,res){
   }
 })
 
-app.post("/loanFilter",function(req,res){
-  const identifier = req.body.identifier;
-  const principalAmount = req.body.principalAmount;
-  const tenure = req.body.tenure;
-  const interest = req.body.interest;
-  const status = req.body.status;
-  User.findOne({"loanPlan._id":identifier},function(err,foundR){
-    if(foundR){
-      console.log(foundR)
-    }else{
-      console.log("nope")
-    }
-  })
-})
+
 
 app.post("/secretsAgent", function(req,res){
   if(req.isAuthenticated()){
@@ -221,7 +202,6 @@ app.post("/secretsAgent", function(req,res){
       if(!err){
         User.findOne({username:username},function(err,foundOne){
           res.render("secretsAgent",{customers:found,loan:foundOne.loanPlan})
-          // console.log(foundOne.loanPlan);
         })
       }
     })
@@ -230,6 +210,77 @@ app.post("/secretsAgent", function(req,res){
     res.redirect("/login")
   }
 })
+
+app.post("/secretsAdmin",function(req,res){
+  if(req.isAuthenticated()){
+    const username = req.body.username;
+    User.find({role:"Customer"},function(err,found){
+      if(!err){
+        User.findOne({username:username},function(err,foundOne){
+          res.render("secretsAdmin",{customers:found,loan:foundOne.loanPlan})
+        })
+      }
+    })
+  }else{
+    res.redirect("/login")
+  }
+})
+
+app.post("/loanFilter",function(req,res){
+  const identifier = req.body.identifier;
+  const principalAmount = req.body.principalAmount;
+  const tenure = req.body.tenure;
+  const interest = req.body.interest;
+  const status = req.body.status;
+  if(status==="Apply"){
+    var statusLoan = "Pending";
+    User.findOneAndUpdate({"loanPlan._id":identifier},{$set:{"loanPlan.$.principalAmount":principalAmount,"loanPlan.$.tenure":tenure,"loanPlan.$.interest":interest,"loanPlan.$.status":statusLoan}},function(err){
+      if(err)
+      {
+         console.log(err);
+      }
+      else
+      {
+         console.log("successfully updated loan status and data");
+         res.redirect("/secretsAgent")
+      }
+    })
+  }else if(status==="Reject"){
+    var statusLoan = "Rejected";
+    User.findOneAndUpdate({"loanPlan._id":identifier},{$pull:{"loanPlan":{_id:identifier}}},function(err){
+      if(err)
+      {
+         console.log(err);
+      }
+      else
+      {
+         console.log("successfully Rejected a Loan");
+         res.redirect("/secretsAgent")
+      }
+    })
+  }
+
+})
+
+app.post("/loanApproval",function(req,res){
+  const identifier = req.body.identifier;
+  const principalAmount = req.body.principalAmount;
+  const tenure = req.body.tenure;
+  const interest = req.body.interest;
+  const status = req.body.status;
+  User.findOneAndUpdate({"loanPlan._id":identifier},{$set:{"loanPlan.$.status":status}},function(err){
+    if(err)
+    {
+       console.log(err);
+    }
+    else
+    {
+       console.log("successfully updated loan approval status");
+       res.redirect("/secretsAdmin")
+    }
+  })
+})
+
 
 app.post("/planDetails",function(req,res){
   if(req.isAuthenticated()){
