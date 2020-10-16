@@ -241,7 +241,7 @@ app.post("/loanFilter",function(req,res){
       }
       else
       {
-         console.log("successfully updated loan status and data");
+         console.log("successfully Applied a loan for approval and edited loan changes");
          res.redirect("/secretsAgent")
       }
     })
@@ -268,17 +268,33 @@ app.post("/loanApproval",function(req,res){
   const tenure = req.body.tenure;
   const interest = req.body.interest;
   const status = req.body.status;
-  User.findOneAndUpdate({"loanPlan._id":identifier},{$set:{"loanPlan.$.status":status}},function(err){
-    if(err)
-    {
-       console.log(err);
-    }
-    else
-    {
-       console.log("successfully updated loan approval status");
-       res.redirect("/secretsAdmin")
-    }
-  })
+  if(status==="Approve"){
+    var statusLoan = "Approved";
+    User.findOneAndUpdate({"loanPlan._id":identifier},{$set:{"loanPlan.$.status":statusLoan}},function(err){
+      if(err)
+      {
+         console.log(err);
+      }
+      else
+      {
+         console.log("successfully Approved a Loan Request");
+         res.redirect("/secretsAdmin")
+      }
+    })
+  }else if(status==="Reject"){
+    var statusLoan = "Rejected";
+    User.findOneAndUpdate({"loanPlan._id":identifier},{$pull:{"loanPlan":{_id:identifier}}},function(err){
+      if(err)
+      {
+         console.log(err);
+      }
+      else
+      {
+         console.log("successfully Rejected a Loan");
+         res.redirect("/secretsAgent")
+      }
+    })
+  }
 })
 
 
