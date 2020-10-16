@@ -227,6 +227,7 @@ app.post("/secretsAdmin",function(req,res){
 })
 
 app.post("/loanFilter",function(req,res){
+  if(req.isAuthenticated()){
   const identifier = req.body.identifier;
   const principalAmount = req.body.principalAmount;
   const tenure = req.body.tenure;
@@ -259,10 +260,13 @@ app.post("/loanFilter",function(req,res){
       }
     })
   }
-
+}else{
+  res.redirect("/login");
+}
 })
 
 app.post("/loanApproval",function(req,res){
+  if(req.isAuthenticated()){
   const identifier = req.body.identifier;
   const principalAmount = req.body.principalAmount;
   const tenure = req.body.tenure;
@@ -295,6 +299,21 @@ app.post("/loanApproval",function(req,res){
       }
     })
   }
+}else{
+  res.redirect("/login")
+}
+})
+
+app.post("/reviewLoan",function(req,res){
+  if(req.isAuthenticated()){
+  const p = req.body.principalAmount;
+  const t = req.body.tenure;
+  const i = req.body.interest;
+  const loan = new Loan(p,t,i);
+  res.render("reviewLoan",{loan:loan})
+}else{
+  res.redirect("/login")
+}
 })
 
 
