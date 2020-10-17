@@ -57,6 +57,16 @@ passport.deserializeUser(User.deserializeUser(function(user, done) {
 }));
 
 app.get("/",function(req,res){
+  User.find({},function(err,response){
+    if(!err){
+      if(response.length===0){
+        mockData()
+        console.log("Data Mocked")
+      }else{
+        console.log("Data already exists, can't mock data again")
+      }
+    }
+  })
   res.render("home")
 })
 
@@ -346,3 +356,22 @@ app.post("/planDetails",function(req,res){
 app.listen(3000,function(req,res){
   console.log("server up at 3000");
 })
+
+function mockData(){
+  User.register({username:"customer1@c.com",role:"Customer"},"1234",function(err,user){
+if(!err){
+  console.log("Customer 1 Registered")
+}})
+User.register({username:"customer2@c.com",role:"Customer"},"1234",function(err,user){
+if(!err){
+console.log("Customer 2 Registered")
+}})
+  User.register({username:"agent@a.com",role:"Agent"},"1234",function(err,user){
+if(!err){
+console.log("Agent Registered")
+}})
+  User.register({username:"admin@a.com",role:"Admin"},"1234",function(err,user){
+if(!err){
+console.log("Admin Registered")
+}})
+}
