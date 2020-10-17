@@ -344,5 +344,5 @@ app.post("/planDetails",function(req,res){
 })
 
 app.listen(3000,function(req,res){
-  console.log("server up at 3000")
+  console.log("server up at 3000");
 })
