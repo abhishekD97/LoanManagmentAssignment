@@ -24,8 +24,9 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// mongoose.connect("mongodb://mongo:27017/redcarpetupassignmentDB",{ useNewUrlParser: true,useUnifiedTopology: true });
-mongoose.connect(process.env.URI,{useNewUrlParser: true, useUnifiedTopology: true});
+mongoose.connect("mongodb+srv://abhishek-dolli:test123@cluster1.vkfmq.mongodb.net/redcarpetupassignmentDB",{ useNewUrlParser: true,useUnifiedTopology: true });
+// mongoose.connect(process.env.URI,{useNewUrlParser: true, useUnifiedTopology: true});
+
 mongoose.set('useNewUrlParser', true);
 mongoose.set('useFindAndModify', false);
 mongoose.set('useCreateIndex', true);
