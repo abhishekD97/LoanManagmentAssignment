@@ -17,7 +17,7 @@ app.set('view engine','ejs')
 app.use(cookieParser())
 
 app.use(session({
-  secret:process.env.Access_Token,
+  secret:"12af178f8474b9171835e311df7a48e7edb13097fc8e374660a425a4730d44d175b1a6fced1d67e184bbca2cae50534b9131545938ec30a487b54ebd9e392e73",
   resave:false,
   saveUninitialized:false
 }))
@@ -25,7 +25,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 mongoose.connect("mongodb+srv://abhishek-dolli:test123@cluster1.vkfmq.mongodb.net/redcarpetupassignmentDB",{ useNewUrlParser: true,useUnifiedTopology: true });
-// mongoose.connect(process.env.URI,{useNewUrlParser: true, useUnifiedTopology: true});
 
 mongoose.set('useNewUrlParser', true);
 mongoose.set('useFindAndModify', false);
